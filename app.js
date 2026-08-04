@@ -40,7 +40,10 @@ document.getElementById("qrandom").addEventListener("click", () => {
   setTimeout(() => pick.style.outline = "", 2000);
 });
 document.querySelectorAll(".qcopy").forEach(btn => btn.addEventListener("click", () => {
-  navigator.clipboard.writeText(btn.dataset.text);
+  const bq = btn.closest("blockquote");
+  const text = bq.querySelector("p").textContent;
+  const author = bq.querySelector("footer")?.textContent || "";
+  navigator.clipboard.writeText(text + "\n" + author);
 }));
 
 apply();
