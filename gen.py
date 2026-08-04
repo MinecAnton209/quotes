@@ -2,6 +2,7 @@
 """Parse _quotes.txt and generate index.html. The author is taken from "— ..." lines."""
 import html
 import re
+import sys
 
 blocks = []       # list of tuples: (kind, text, author), kind: 'quote' | 'after'
 header = None
@@ -9,6 +10,7 @@ header = None
 cur_text, cur_author = None, None
 after_mode = False
 numbered = re.compile(r"^(\d+)\.\s*>(.*)$")   # e.g. "12. > Some quote"
+numbered_missing_marker = re.compile(r"^(\d+)\.\s+(?!>)(.*)$")  # "12. Some quote" (no ">")
 author_re = re.compile(r"^—\s*(.*)$")          # e.g. "— MinecAnton209"
 
 def flush():
@@ -31,6 +33,12 @@ with open("_quotes.txt", encoding="utf-8") as f:
             flush()
             cur_text, cur_author = m.group(2).strip(), None
             continue
+        if numbered_missing_marker.match(s):
+            # looks like a quote header but lacks the ">" marker; would silently
+            # get appended to the previous quote, so surface it as a warning
+            print(f"WARNING: quote header without '>' marker (will be treated "
+                  f"as continuation): {s[:70]}", file=sys.stderr)
+            # fall through so the line is still handled as quote text
         m = author_re.match(s)
         if m:
             # author line; attach to the current quote if one is open
