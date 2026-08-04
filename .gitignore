@@ -1,0 +1,11 @@
+# Source quotes file (HTML is the committed artifact)
+_quotes.txt
+
+# Python
+__pycache__/
+*.pyc
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp
