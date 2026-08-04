@@ -69,11 +69,17 @@ lines.append("</head>")
 lines.append("<body>")
 lines.append(f"<h1>{esc(header) if header else 'Мои цитаты'}</h1>")
 
-for i, (kind, text, author) in enumerate(blocks, 1):
+num = 0
+for kind, text, author in blocks:
     if kind == "after":
         lines.append("<h2>Послесловие</h2>")
+    else:
+        num += 1
     lines.append("<blockquote>")
-    lines.append(f"  <p>{esc(text)}</p>")
+    if kind == "quote":
+        lines.append(f"  <p><b>{num}.</b> {esc(text)}</p>")
+    else:
+        lines.append(f"  <p>{esc(text)}</p>")
     if author:
         lines.append(f"  <footer>&mdash; {esc(author)}</footer>")
     lines.append("</blockquote>")
