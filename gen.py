@@ -64,10 +64,24 @@ lines.append('<html lang="ru">')
 lines.append("<head>")
 lines.append('<meta charset="utf-8">')
 lines.append('<meta name="viewport" content="width=device-width, initial-scale=1">')
+lines.append('<link rel="stylesheet" href="style.css">')
 lines.append("<title>Мои цитаты</title>")
 lines.append("</head>")
 lines.append("<body>")
 lines.append(f"<h1>{esc(header) if header else 'Мои цитаты'}</h1>")
+
+lines.append('<div id="controls">')
+lines.append('<input id="qsearch" type="search" placeholder="Поиск по цитатам…">')
+lines.append('<select id="qlength">')
+lines.append('  <option value="all">Любая длина</option>')
+lines.append('  <option value="short">Короткие (≤15 слов)</option>')
+lines.append('  <option value="medium">Средние (16–30 слов)</option>')
+lines.append('  <option value="long">Длинные (31+ слов)</option>')
+lines.append("</select>")
+lines.append('<button id="qrandom" type="button">Случайная</button>')
+lines.append('<button id="qreset" type="button">Показать все</button>')
+lines.append('<span id="qcount"></span>')
+lines.append("</div>")
 
 # Table of contents (numbered list with quote snippets)
 lines.append("<ol>")
@@ -93,6 +107,8 @@ for kind, text, author in blocks:
         lines.append(f"  <p>{esc(text)}</p>")
     if author:
         lines.append(f"  <footer>&mdash; {esc(author)}</footer>")
+    lines.append(f'  <button class="qcopy" type="button" title="Скопировать" '
+                 f'data-text="{esc(text)}">⧉</button>')
     lines.append("</blockquote>")
 
 lines.append("")
@@ -100,6 +116,7 @@ lines.append("<hr>")
 lines.append('<p>Все цитаты автора MinecAnton209 лицензированы по лицензии '
              '<a rel="license" href="https://creativecommons.org/licenses/by-nd/4.0/">'
              'CC BY-ND 4.0</a>.</p>')
+lines.append('<script src="app.js" defer></script>')
 lines.append("</body>")
 lines.append("</html>")
 lines.append("")

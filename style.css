@@ -1,0 +1,31 @@
+#controls {
+  margin: 12px 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+#controls input,
+#controls select,
+#controls button {
+  font: inherit;
+  padding: 4px 8px;
+}
+
+#qsearch {
+  flex: 1;
+  min-width: 180px;
+}
+
+blockquote .qcopy {
+  border: 0;
+  background: none;
+  cursor: pointer;
+  opacity: 0.5;
+  font-size: 1.2em;
+}
+
+blockquote .qcopy:hover {
+  opacity: 1;
+}
