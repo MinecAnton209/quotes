@@ -69,13 +69,24 @@ lines.append("</head>")
 lines.append("<body>")
 lines.append(f"<h1>{esc(header) if header else 'Мои цитаты'}</h1>")
 
+# Table of contents (numbered list with quote snippets)
+lines.append("<ol>")
+num = 0
+for kind, text, author in blocks:
+    if kind == "quote":
+        num += 1
+        snippet = text if len(text) <= 50 else text[:50] + "…"
+        lines.append(f'  <li><a href="#q{num}">{num}. {esc(snippet)}</a></li>')
+lines.append("</ol>")
+lines.append("<hr>")
+
 num = 0
 for kind, text, author in blocks:
     if kind == "after":
         lines.append("<h2>Послесловие</h2>")
     else:
         num += 1
-    lines.append("<blockquote>")
+    lines.append(f'<blockquote id="q{num}">')
     if kind == "quote":
         lines.append(f"  <p><b>{num}.</b> {esc(text)}</p>")
     else:
