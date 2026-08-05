@@ -79,7 +79,7 @@ lines.append("<body>")
 lines.append(f"<h1>{esc(header) if header else 'Цитаты MinecAnton209'}</h1>")
 
 lines.append('<div id="controls">')
-lines.append('<input id="qsearch" type="search" placeholder="Поиск по цитатам…">')
+lines.append('<input id="qsearch" type="search" placeholder="Поиск по тексту или номеру…">')
 lines.append('<select id="qlength">')
 lines.append('  <option value="all">Любая длина</option>')
 lines.append('  <option value="short">Короткие (≤15 слов)</option>')
@@ -105,10 +105,12 @@ lines.append("<hr>")
 num = 0
 for kind, text, author in blocks:
     if kind == "after":
-        lines.append("<h2>Послесловие</h2>")
+        lines.append('<h2 id="afterword">Послесловие</h2>')
+        bq_id = "afterword"
     else:
         num += 1
-    lines.append(f'<blockquote id="q{num}">')
+        bq_id = f"q{num}"
+    lines.append(f'<blockquote id="{bq_id}">')
     if kind == "quote":
         lines.append(f"  <p><b>{num}.</b> {esc(text)}</p>")
     else:
