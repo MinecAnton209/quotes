@@ -32,8 +32,14 @@ blockquote .qlink:hover {
   opacity: 1;
 }
 
-/* the "copy link" button floats to the left of the quote text */
+/* the "copy link" button sits in the quote's left margin, without shifting the text */
+blockquote {
+  position: relative;
+}
+
 blockquote .qlink {
-  float: left;
-  margin: 0 8px 0 0;
+  position: absolute;
+  left: -1.3em;
+  top: 0.2em;
+  margin: 0;
 }
