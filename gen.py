@@ -111,6 +111,7 @@ for kind, text, author in blocks:
         num += 1
         bq_id = f"q{num}"
     lines.append(f'<blockquote id="{bq_id}">')
+    lines.append(f'  <button class="qlink" type="button" title="Скопировать ссылку">#</button>')
     if kind == "quote":
         lines.append(f"  <p><b>{num}.</b> {esc(text)}</p>")
     else:

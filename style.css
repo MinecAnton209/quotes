@@ -18,7 +18,8 @@
   min-width: 180px;
 }
 
-blockquote .qcopy {
+blockquote .qcopy,
+blockquote .qlink {
   border: 0;
   background: none;
   cursor: pointer;
@@ -26,6 +27,13 @@ blockquote .qcopy {
   font-size: 1.2em;
 }
 
-blockquote .qcopy:hover {
+blockquote .qcopy:hover,
+blockquote .qlink:hover {
   opacity: 1;
+}
+
+/* the "copy link" button floats to the left of the quote text */
+blockquote .qlink {
+  float: left;
+  margin: 0 8px 0 0;
 }

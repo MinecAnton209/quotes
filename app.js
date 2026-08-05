@@ -123,4 +123,15 @@ document.querySelectorAll(".qcopy").forEach(btn => btn.addEventListener("click",
   navigator.clipboard.writeText(text + "\n" + author);
 }));
 
+// Copy a permalink to the quote (current page URL + its anchor, e.g. ".../index.html#q12")
+document.querySelectorAll(".qlink").forEach(btn => btn.addEventListener("click", async () => {
+  const url = location.origin + location.pathname + "#" + btn.closest("blockquote").id;
+  try {
+    await navigator.clipboard.writeText(url);
+  } catch (e) {
+    // clipboard unavailable (non-secure context) — fall back to location bar
+    location.hash = btn.closest("blockquote").id;
+  }
+}));
+
 apply();
