@@ -32,6 +32,25 @@ blockquote .qlink:hover {
   opacity: 1;
 }
 
+/* "semantic search" toggle — visually pressed while active */
+#qsense.active {
+  background: #059;
+  color: #fff;
+}
+
+/* highlighted match inside a quote */
+mark {
+  background: #ffe08a;
+  padding: 0 1px;
+}
+
+/* "no results" notice */
+#qmode {
+  font-size: 0.9em;
+  color: #888;
+  margin-left: 8px;
+}
+
 /* the "copy link" button sits in the quote's left margin, without shifting the text */
 blockquote {
   position: relative;

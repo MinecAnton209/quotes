@@ -87,8 +87,10 @@ lines.append('  <option value="medium">Средние (16–30 слов)</option
 lines.append('  <option value="long">Длинные (31+ слов)</option>')
 lines.append("</select>")
 lines.append('<button id="qrandom" type="button">Случайная</button>')
-lines.append('<button id="qreset" type="button">Показать все</button>')
+lines.append('<button id="qreset" type="button">Сброс</button>')
+lines.append('<button id="qsense" type="button">⇄ по смыслу</button>')
 lines.append('<span id="qcount"></span>')
+lines.append('<span id="qmode"></span>')
 lines.append("</div>")
 
 # Table of contents (numbered list with quote snippets)
@@ -127,7 +129,7 @@ lines.append("<hr>")
 lines.append('<p>Все цитаты автора MinecAnton209 лицензированы по лицензии '
              '<a rel="license" href="https://creativecommons.org/licenses/by-nd/4.0/">'
              'CC BY-ND 4.0</a>.</p>')
-lines.append('<script src="app.js" defer></script>')
+lines.append('<script src="app.js?v=3" defer></script>')
 lines.append("</body>")
 lines.append("</html>")
 lines.append("")
