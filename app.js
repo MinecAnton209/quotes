@@ -1,15 +1,18 @@
-// Quote blocks (id like q1..q95); the afterword (id="afterword") is excluded.
+// Quote blocks (id like q1..q97, plus afterword); the afterword is excluded.
 const q = Array.from(document.querySelectorAll('blockquote[id^="q"]'));
 const search = document.getElementById("qsearch");
 const length = document.getElementById("qlength");
 const count = document.getElementById("qcount");
 const mode = document.getElementById("qmode");
 const senseBtn = document.getElementById("qsense");
-// The table of contents is the only <ol> on the page; guard it anyway so a
-// missing element can't break the search.
+const favBtn = document.getElementById("qfav");
 const toc = document.querySelector("ol");
 
-let sense = false; // default: exact (substring) mode; toggled by the "по смыслу" button
+let sense = false;
+let favOnly = false;
+
+// Check for reduced motion preference
+const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 function words(t) {
   return t.trim().split(/\s+/).length;
@@ -23,6 +26,61 @@ function bucket(t) {
 // Quote number from its id ("q12" -> 12)
 function quoteNum(b) {
   return parseInt(b.id.slice(1), 10);
+}
+
+// --- Favorites: stored in localStorage as comma-separated IDs ---
+function getFavs() {
+  return new Set(JSON.parse(localStorage.getItem("fav") || "[]"));
+}
+function saveFavs(favs) {
+  localStorage.setItem("fav", JSON.stringify([...favs]));
+}
+function toggleFav(bq) {
+  const favs = getFavs();
+  const id = bq.id;
+  const heart = bq.querySelector(".qheart");
+  if (favs.has(id)) {
+    favs.delete(id);
+    heart.setAttribute("aria-pressed", "false");
+  } else {
+    favs.add(id);
+    heart.setAttribute("aria-pressed", "true");
+  }
+  saveFavs(favs);
+  updateFavBtn();
+  return favs;
+}
+
+function updateFavBtn() {
+  const favs = getFavs();
+  favBtn.setAttribute("aria-pressed", favOnly ? "true" : "false");
+  favBtn.textContent = "★ Избранное" + (favs.size ? " (" + favs.size + ")" : "");
+}
+
+function syncFavButtons() {
+  const favs = getFavs();
+  q.forEach(b => {
+    const heart = b.querySelector(".qheart");
+    if (heart) {
+      heart.setAttribute("aria-pressed", favs.has(b.id) ? "true" : "false");
+    }
+  });
+}
+
+// --- Toast notification ---
+let toastEl = null;
+function toast(text) {
+  if (!toastEl) {
+    toastEl = document.createElement("div");
+    toastEl.id = "qtoast";
+    toastEl.setAttribute("role", "status");
+    toastEl.setAttribute("aria-live", "polite");
+    document.body.appendChild(toastEl);
+  }
+  toastEl.textContent = text;
+  toastEl.classList.add("show");
+  clearTimeout(toastEl._hide);
+  toastEl._hide = setTimeout(() => toastEl.classList.remove("show"), 2000);
 }
 
 // --- Vector index: character 3-gram TF-IDF + cosine similarity ---
@@ -131,6 +189,19 @@ function highlight(b, raw) {
   textNode.parentNode.replaceChild(out, textNode);
 }
 
+// Update the URL with current filter state (doesn't reload the page)
+function updateURL() {
+  const params = new URLSearchParams();
+  const raw = search.value.trim();
+  if (raw) params.set("q", raw);
+  if (length.value !== "all") params.set("len", length.value);
+  if (sense) params.set("sense", "1");
+  if (favOnly) params.set("fav", "1");
+  const qs = params.toString();
+  const url = qs ? "?" + qs : window.location.pathname + window.location.hash;
+  history.replaceState(null, "", url);
+}
+
 function apply({ scroll = false } = {}) {
   const raw = search.value.trim();
   const isNum = /^\d+$/.test(raw);
@@ -145,12 +216,19 @@ function apply({ scroll = false } = {}) {
   mode.textContent = "";
 
   // hide the table of contents while filtering so results aren't pushed below it
-  const filtering = !!raw || bucketSel !== "all";
+  const filtering = !!raw || bucketSel !== "all" || favOnly;
   if (toc) toc.style.display = filtering ? "none" : "";
 
   // candidates within length bucket
-  const cand = q.filter(b =>
+  let cand = q.filter(b =>
     bucketSel === "all" || bucket(b.querySelector("p").textContent) === bucketSel);
+
+  // favorites filter
+  if (favOnly) {
+    const favs = getFavs();
+    cand = cand.filter(b => favs.has(b.id));
+    mode.textContent = "★ избранное";
+  }
 
   let vis;
   if (isNum) {
@@ -164,7 +242,6 @@ function apply({ scroll = false } = {}) {
       .slice(0, 8)
       .map(x => x.b);
     mode.textContent = "по смыслу — ближайшие";
-    // dim off the mode button so it's clear it's active
   } else if (raw) {
     // exact/near: substring across gram-expanded text OR plain substring
     const lower = raw.toLowerCase();
@@ -180,42 +257,115 @@ function apply({ scroll = false } = {}) {
   }
 
   q.forEach(b => b.style.display = vis.includes(b) ? "" : "none");
-  count.textContent = vis.length + " / " + q.length;
+  count.textContent = vis.length + " / " + (filtering ? cand.length : q.length);
 
   // highlight matches in visible quotes
   vis.forEach(b => { if (raw && !isNum) highlight(b, raw); });
 
   // visual feedback + scroll to first result
+  senseBtn.setAttribute("aria-pressed", sense ? "true" : "false");
   senseBtn.classList.toggle("active", sense && !!raw);
-  if (scroll && vis.length) vis[0].scrollIntoView({ behavior: "smooth", block: "center" });
+  if (scroll && vis.length) {
+    vis[0].scrollIntoView({
+      behavior: prefersReducedMotion ? "auto" : "smooth",
+      block: "center"
+    });
+  }
+
+  updateURL();
 }
 
-search.addEventListener("input", () => apply({ scroll: true }));
-length.addEventListener("change", () => apply());
+// Restore state from URL on load
+function restoreState() {
+  const params = new URLSearchParams(window.location.search);
+  const qParam = params.get("q");
+  const lenParam = params.get("len");
+  const senseParam = params.get("sense");
+  const favParam = params.get("fav");
+
+  if (qParam) search.value = qParam;
+  if (lenParam) length.value = lenParam;
+  sense = !!senseParam;
+  favOnly = !!favParam;
+
+  syncFavButtons();
+  updateFavBtn();
+  apply();
+
+  // If URL had a hash, scroll to that quote
+  if (window.location.hash) {
+    const el = document.querySelector(window.location.hash);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+}
+
+// Debounced apply for search input
+let searchDebounce;
+function debouncedApply() {
+  clearTimeout(searchDebounce);
+  searchDebounce = setTimeout(() => apply({ scroll: true }), 150);
+}
+
+search.addEventListener("input", debouncedApply);
+length.addEventListener("change", () => { apply(); });
+// Also listen for changes from the URL (back/forward buttons)
+window.addEventListener("popstate", (e) => {
+  restoreState();
+});
+
 document.getElementById("qreset").addEventListener("click", () => {
   search.value = "";
   length.value = "all";
   sense = false;
+  favOnly = false;
+  setTimeout(() => {
+    history.replaceState(null, "", window.location.pathname + window.location.hash);
+  }, 50);
   apply();
 });
+
 senseBtn.addEventListener("click", () => {
   sense = !sense;
   apply({ scroll: !!search.value.trim() });
 });
+
+favBtn.addEventListener("click", () => {
+  favOnly = !favOnly;
+  updateFavBtn();
+  apply({ scroll: !!search.value.trim() });
+});
+
 document.getElementById("qrandom").addEventListener("click", () => {
   const vis = q.filter(b => b.style.display !== "none");
   if (!vis.length) return;
   const pick = vis[Math.floor(Math.random() * vis.length)];
-  pick.scrollIntoView({ behavior: "smooth", block: "center" });
+  pick.scrollIntoView({
+    behavior: prefersReducedMotion ? "auto" : "smooth",
+    block: "center"
+  });
   pick.style.outline = "2px solid #059";
   setTimeout(() => pick.style.outline = "", 2000);
 });
 
+// Heart buttons: toggle favorite on click
+document.querySelectorAll(".qheart").forEach(btn => {
+  btn.addEventListener("click", (e) => {
+    const bq = btn.closest("blockquote");
+    toggleFav(bq);
+    toast(bq.style.display === "none" ? "Скрыта из избранного" : "Добавлено в избранное");
+  });
+});
+
+// Copy quote text to clipboard
 document.querySelectorAll(".qcopy").forEach(btn => btn.addEventListener("click", () => {
   const bq = btn.closest("blockquote");
   const text = bq.querySelector("p").textContent;
   const author = bq.querySelector("footer")?.textContent || "";
-  navigator.clipboard.writeText(text + "\n" + author);
+  navigator.clipboard.writeText(text + "\n" + author).then(() => {
+    toast("Цитата скопирована");
+  }).catch(() => {
+    toast("Не удалось скопировать");
+  });
 }));
 
 // Copy a permalink to the quote (current page URL + its anchor, e.g. ".../index.html#q12")
@@ -223,10 +373,50 @@ document.querySelectorAll(".qlink").forEach(btn => btn.addEventListener("click",
   const url = location.origin + location.pathname + "#" + btn.closest("blockquote").id;
   try {
     await navigator.clipboard.writeText(url);
+    toast("Ссылка скопирована");
   } catch (e) {
     // clipboard unavailable (non-secure context) — fall back to location bar
     location.hash = btn.closest("blockquote").id;
   }
 }));
 
-apply();
+// Keyboard navigation
+document.addEventListener("keydown", (e) => {
+  // Enter on search field: focus first visible quote
+  if (e.target === search && e.key === "Enter") {
+    e.preventDefault();
+    const vis = q.filter(b => b.style.display !== "none");
+    if (vis.length) vis[0].scrollIntoView({ behavior: prefersReducedMotion ? "auto" : "smooth", block: "center" });
+  }
+  // Escape: clear search and reset
+  if (e.key === "Escape" && document.activeElement === search) {
+    search.value = "";
+    length.value = "all";
+    apply();
+  }
+  // Arrow navigation: up/down through visible quotes
+  if (e.key === "ArrowDown" && document.activeElement === document.body) {
+    e.preventDefault();
+    const vis = q.filter(b => b.style.display !== "none");
+    if (!vis.length) return;
+    const hash = window.location.hash.slice(1);
+    const idx = vis.findIndex(b => b.id === hash);
+    if (idx >= 0 && idx < vis.length - 1) {
+      vis[idx + 1].scrollIntoView({ behavior: "smooth", block: "center" });
+      history.pushState(null, "", "#" + vis[idx + 1].id);
+    }
+  }
+  if (e.key === "ArrowUp" && document.activeElement === document.body) {
+    e.preventDefault();
+    const vis = q.filter(b => b.style.display !== "none");
+    if (!vis.length) return;
+    const hash = window.location.hash.slice(1);
+    const idx = vis.findIndex(b => b.id === hash);
+    if (idx > 0) {
+      vis[idx - 1].scrollIntoView({ behavior: "smooth", block: "center" });
+      history.pushState(null, "", "#" + vis[idx - 1].id);
+    }
+  }
+});
+
+restoreState();

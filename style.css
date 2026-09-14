@@ -19,7 +19,8 @@
 }
 
 blockquote .qcopy,
-blockquote .qlink {
+blockquote .qlink,
+blockquote .qheart {
   border: 0;
   background: none;
   cursor: pointer;
@@ -28,14 +29,28 @@ blockquote .qlink {
 }
 
 blockquote .qcopy:hover,
-blockquote .qlink:hover {
+blockquote .qlink:hover,
+blockquote .qheart:hover {
   opacity: 1;
 }
 
 /* "semantic search" toggle — visually pressed while active */
-#qsense.active {
+#qsense.active,
+#qsense[aria-pressed="true"] {
   background: #059;
   color: #fff;
+}
+
+/* "favorites" toggle — visually pressed while active */
+#qfav[aria-pressed="true"] {
+  background: #059;
+  color: #fff;
+}
+
+/* heart filled when favorited */
+.qheart[aria-pressed="true"] {
+  color: #e63946;
+  opacity: 1;
 }
 
 /* highlighted match inside a quote */
@@ -61,4 +76,40 @@ blockquote .qlink {
   left: -1.3em;
   top: 0.2em;
   margin: 0;
+}
+
+blockquote .qheart {
+  position: absolute;
+  left: -1.3em;
+  top: 1.5em;
+  margin: 0;
+}
+
+/* toast notification */
+#qtoast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(24px);
+  background: #333;
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 0.9em;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+#qtoast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* respect reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  #qtoast {
+    transition: none;
+  }
 }

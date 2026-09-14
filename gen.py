@@ -66,29 +66,35 @@ flush()
 def esc(s):
     return html.escape(s, quote=False)
 
+title = esc(header) if header else "Цитаты MinecAnton209"
+
 lines = []
 lines.append("<!doctype html>")
 lines.append('<html lang="ru">')
 lines.append("<head>")
 lines.append('<meta charset="utf-8">')
 lines.append('<meta name="viewport" content="width=device-width, initial-scale=1">')
+lines.append('<meta name="theme-color" content="#059">')
+lines.append('<meta name="description" content="Цитаты MinecAnton209 — подборка мудрых и глубоких мыслей о дружбе, жизни, силе и истине.">')
+lines.append('<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🖤</text></svg>">')
 lines.append('<link rel="stylesheet" href="style.css">')
-lines.append("<title>Цитаты MinecAnton209</title>")
+lines.append(f"<title>{title}</title>")
 lines.append("</head>")
 lines.append("<body>")
-lines.append(f"<h1>{esc(header) if header else 'Цитаты MinecAnton209'}</h1>")
+lines.append(f"<h1>{title}</h1>")
 
-lines.append('<div id="controls">')
-lines.append('<input id="qsearch" type="search" placeholder="Поиск по тексту или номеру…">')
-lines.append('<select id="qlength">')
+lines.append('<div id="controls" role="search">')
+lines.append('<input id="qsearch" type="search" placeholder="Поиск по тексту или номеру…" aria-label="Поиск цитат">')
+lines.append('<select id="qlength" aria-label="Фильтр по длине">')
 lines.append('  <option value="all">Любая длина</option>')
 lines.append('  <option value="short">Короткие (≤15 слов)</option>')
 lines.append('  <option value="medium">Средние (16–30 слов)</option>')
 lines.append('  <option value="long">Длинные (31+ слов)</option>')
 lines.append("</select>")
-lines.append('<button id="qrandom" type="button">Случайная</button>')
-lines.append('<button id="qreset" type="button">Сброс</button>')
-lines.append('<button id="qsense" type="button">⇄ по смыслу</button>')
+lines.append('<button id="qfav" type="button" aria-pressed="false">★ Избранное</button>')
+lines.append('<button id="qrandom" type="button" aria-label="Случайная цитата">Случайная</button>')
+lines.append('<button id="qreset" type="button" aria-label="Сбросить фильтры">Сброс</button>')
+lines.append('<button id="qsense" type="button" aria-pressed="false">⇄ по смыслу</button>')
 lines.append('<span id="qcount"></span>')
 lines.append('<span id="qmode"></span>')
 lines.append("</div>")
@@ -113,23 +119,24 @@ for kind, text, author in blocks:
         num += 1
         bq_id = f"q{num}"
     lines.append(f'<blockquote id="{bq_id}">')
-    lines.append(f'  <button class="qlink" type="button" title="Скопировать ссылку">#</button>')
+    lines.append(f'  <button class="qlink" type="button" title="Скопировать ссылку" aria-label="Скопировать ссылку">#</button>')
+    lines.append(f'  <button class="qheart" type="button" title="В избранное" aria-label="В избранное" aria-pressed="false">♥</button>')
     if kind == "quote":
         lines.append(f"  <p><b>{num}.</b> {esc(text)}</p>")
     else:
         lines.append(f"  <p>{esc(text)}</p>")
     if author:
         lines.append(f"  <footer>&mdash; {esc(author)}</footer>")
-    lines.append(f'  <button class="qcopy" type="button" title="Скопировать" '
+    lines.append(f'  <button class="qcopy" type="button" title="Скопировать цитату" aria-label="Скопировать цитату" '
                  f'data-text="{esc(text)}">⧉</button>')
     lines.append("</blockquote>")
 
 lines.append("")
 lines.append("<hr>")
-lines.append('<p>Все цитаты автора MinecAnton209 лицензированы по лицензии '
+lines.append(f'<p>Все цитаты автора MinecAnton209 лицензированы по лицензии '
              '<a rel="license" href="https://creativecommons.org/licenses/by-nd/4.0/">'
              'CC BY-ND 4.0</a>.</p>')
-lines.append('<script src="app.js?v=3" defer></script>')
+lines.append('<script src="app.js?v=4" defer></script>')
 lines.append("</body>")
 lines.append("</html>")
 lines.append("")
